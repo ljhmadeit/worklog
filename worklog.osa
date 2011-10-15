@@ -1,0 +1,23 @@
+-- Tell what you are doing now
+
+tell application "System Events"
+	set frontApp to name of first application process whose frontmost is true
+end tell
+
+try
+	tell application frontApp
+		if the (count of windows) is not 0 then
+			set window_title to name of front window
+		end if
+	end tell
+on error number -1708
+	-- Sometimes, windows don't understand count message.
+	set window_title to ""
+end try
+
+set theDate to (do shell script "date '+%Y/%m/%d-%H:%M'")
+set theIp to do shell script "/sbin/ifconfig en0 | grep 'inet ' | awk '{print $2}'"
+set theSsid to do shell script "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | grep -E '\\<SSID\\>' | awk '{print $2}'"
+
+-- <format-id> <ip> <ssid> <date> <appname> <window-title>
+"a4 " & theIp & " " & theSsid & " " & theDate & " " & frontApp & ": " & window_title
