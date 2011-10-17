@@ -19,5 +19,8 @@ set theDate to (do shell script "date '+%Y/%m/%d-%H:%M'")
 set theIp to do shell script "/sbin/ifconfig en0 | grep 'inet ' | awk '{print $2}'"
 set theSsid to do shell script "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | grep -E '\\<SSID\\>' | awk '{print $2}'"
 
+if theIp = "" then set theIp to "-"
+if theSsid = "" then set theSsid to "-"
+
 -- <format-id> <ip> <ssid> <date> <appname> <window-title>
 "a4 " & theIp & " " & theSsid & " " & theDate & " " & frontApp & ": " & window_title
