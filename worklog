@@ -1,0 +1,68 @@
+#!/usr/bin/python
+
+"""Worklog tool"""
+
+import os, sys, re
+from optparse import OptionParser
+
+worklog_formats = {
+		''  : "^(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+		'a2': "^(?P<date>[^ ]+)\s+(?P<ip>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+		'a3': "^(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+		'a4': "^(?P<ip>[^ ]+)\s+(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+		}
+
+def main():
+	"""main function"""
+	parser = OptionParser()
+	parser.usage = '%prog'
+	parser.add_option(
+			"-F", "--file", action="store",
+			default=os.path.join(os.environ['HOME'], 'work.log'),
+			dest="worklog_file", help="specify worklog file")
+
+	options, args = parser.parse_args()
+	worklog_file = options.worklog_file
+
+	if not os.path.isfile(worklog_file):
+		print 'Cannot find worklog file: ' + worklog_file 
+		return 1
+
+	jobs = []
+	oldjob = None
+	for line in open(worklog_file).read().split('\n'):
+		try:
+			format_id = line.split()[0]
+		except IndexError:
+			continue
+
+		if not worklog_formats.has_key(format_id):
+			format_id = ''
+		format = worklog_formats[format_id]
+		line   = line[len(format_id):].strip()
+
+		try:
+			newjob = re.match(format, line).groupdict()
+		except AttributeError:
+			continue
+
+		newjob['time'] = 1
+
+		if not oldjob:
+			oldjob = newjob
+		elif not all(newjob[key] == oldjob[key] for key in ['app', 'title']):
+			oldjob['date'] and jobs.append(oldjob)
+			oldjob = newjob
+		else:
+			oldjob['time'] += 1
+
+	jobs.append(oldjob) # add the last job
+
+	for job in jobs:
+		job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
+		print "%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job
+
+	return 0
+
+if __name__ == '__main__':
+	exit(main())
