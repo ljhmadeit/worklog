@@ -2,8 +2,9 @@
 
 """Worklog tool"""
 
-import os, sys, re
+import os, sys, re, time
 from optparse import OptionParser
+from mx import DateTime as mxDateTime
 
 worklog_formats = {
 		''  : "^(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
@@ -12,25 +13,13 @@ worklog_formats = {
 		'a4': "^(?P<ip>[^ ]+)\s+(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
 		}
 
-def main():
-	"""main function"""
-	parser = OptionParser()
-	parser.usage = '%prog'
-	parser.add_option(
-			"-F", "--file", action="store",
-			default=os.path.join(os.environ['HOME'], 'work.log'),
-			dest="worklog_file", help="specify worklog file")
-
-	options, args = parser.parse_args()
-	worklog_file = options.worklog_file
-
-	if not os.path.isfile(worklog_file):
-		print 'Cannot find worklog file: ' + worklog_file 
-		return 1
-
+def parse_lines(lines, request):
 	jobs = []
 	oldjob = None
-	for line in open(worklog_file).read().split('\n'):
+
+	while lines:
+		line = lines.pop()
+
 		try:
 			format_id = line.split()[0]
 		except IndexError:
@@ -46,6 +35,14 @@ def main():
 		except AttributeError:
 			continue
 
+		if request.has_key('date'):
+			try:
+				date = mxDateTime.DateTimeFrom(newjob['date'])
+				if mxDateTime.cmp(mxDateTime.DateTimeFrom(request['date']), date, 24 * 60 * 60) != 0:
+					break
+			except ValueError:
+				pass
+
 		newjob['time'] = 1
 
 		if not oldjob:
@@ -56,7 +53,37 @@ def main():
 		else:
 			oldjob['time'] += 1
 
-	jobs.append(oldjob) # add the last job
+	if oldjob:
+		jobs.append(oldjob) # add the last job
+
+	jobs.reverse()
+
+	return jobs
+
+
+def main():
+	"""main function"""
+	parser = OptionParser()
+	parser.usage = '%prog <date>'
+	parser.add_option(
+			"-F", "--file", action="store",
+			default=os.path.join(os.environ['HOME'], 'work.log'),
+			dest="worklog_file", help="specify worklog file")
+
+	options, args = parser.parse_args()
+	worklog_file = options.worklog_file
+
+	if not os.path.isfile(worklog_file):
+		print 'Cannot find worklog file: ' + worklog_file 
+		return 1
+
+	request = {}
+	if args:
+		request['date'] = args[0]
+
+	lines = open(worklog_file).read().split('\n')
+
+	jobs = parse_lines(lines, request)
 
 	for job in jobs:
 		job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
