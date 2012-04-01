@@ -1,19 +1,19 @@
 Installation
 ------------
 
-1. Put the scripts in any directory and make the worklog script executable.
+Put the scripts in any directory and make the worklog script executable.
 
     $ mkdir -p ~/bin
     $ cp worklog.osa ~/bin
     $ cp worklog ~/bin
     $ chmod u+x ~/bin/worklog
     $ echo 'export PATH=$PATH:~/bin' >> ~/.bashrc
-    
-2. Open your cron table.
+
+Open your cron table.
 
     $ crontab -e
 
-3. Add this line in the table.
+Add this line in the table.
 
     * * * * * osascript ~/bin/worklog.osa >> ~/work.log
 
