@@ -17,6 +17,7 @@ def parse_lines(lines, request):
     jobs = []
     oldjob = None
 
+    in_process = False
     while lines:
         line = lines.pop()
 
@@ -35,11 +36,16 @@ def parse_lines(lines, request):
         except AttributeError:
             continue
 
-        if request.has_key('date'):
+        if request.has_key('from'):
             try:
                 date = mxDateTime.DateTimeFrom(newjob['date'])
-                if mxDateTime.cmp(mxDateTime.DateTimeFrom(request['date']), date, 24 * 60 * 60) != 0:
-                    break
+                if date >= request['from'] and date < request['to']:
+                    in_process = True
+                else:
+                    if in_process:
+                        break
+                    else:
+                        continue
             except ValueError:
                 pass
 
@@ -64,7 +70,8 @@ def parse_lines(lines, request):
 def main():
     """main function"""
     parser = OptionParser()
-    parser.usage = '%prog <date>'
+    parser.usage = '%prog [date]'
+    parser.usage = '%prog <from-date> <to-date>'
     parser.add_option(
             "-F", "--file", action="store",
             default=os.path.join(os.environ['HOME'], 'work.log'),
@@ -78,8 +85,12 @@ def main():
         return 1
 
     request = {}
-    if args:
-        request['date'] = args[0]
+    if len(args) == 1:
+        request['from'] = mxDateTime.DateTimeFrom(args[0])
+        request['to'] = request['from'] + 1
+    elif len(args) == 2:
+        request['from'] = mxDateTime.DateTimeFrom(args[0])
+        request['to'] = mxDateTime.DateTimeFrom(args[1]) + 1
 
     lines = open(worklog_file).read().split('\n')
 
