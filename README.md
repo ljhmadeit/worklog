@@ -19,3 +19,8 @@ See the logs in the specific date.
 See the logs in the specific period.
 
     $ worklog 2012-01-01 2012-01-06
+    
+Dependency
+----------
+
+* [mxDateTime](http://www.egenix.com/products/python/mxBase/mxDateTime/)
