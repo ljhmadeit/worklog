@@ -7,89 +7,89 @@ from optparse import OptionParser
 from mx import DateTime as mxDateTime
 
 worklog_formats = {
-		''  : "^(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
-		'a2': "^(?P<date>[^ ]+)\s+(?P<ip>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
-		'a3': "^(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
-		'a4': "^(?P<ip>[^ ]+)\s+(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
-		}
+        ''  : "^(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+        'a2': "^(?P<date>[^ ]+)\s+(?P<ip>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+        'a3': "^(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+        'a4': "^(?P<ip>[^ ]+)\s+(?P<ap>[^ ]+)\s+(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
+        }
 
 def parse_lines(lines, request):
-	jobs = []
-	oldjob = None
+    jobs = []
+    oldjob = None
 
-	while lines:
-		line = lines.pop()
+    while lines:
+        line = lines.pop()
 
-		try:
-			format_id = line.split()[0]
-		except IndexError:
-			continue
+        try:
+            format_id = line.split()[0]
+        except IndexError:
+            continue
 
-		if not worklog_formats.has_key(format_id):
-			format_id = ''
-		format = worklog_formats[format_id]
-		line   = line[len(format_id):].strip()
+        if not worklog_formats.has_key(format_id):
+            format_id = ''
+        format = worklog_formats[format_id]
+        line   = line[len(format_id):].strip()
 
-		try:
-			newjob = re.match(format, line).groupdict()
-		except AttributeError:
-			continue
+        try:
+            newjob = re.match(format, line).groupdict()
+        except AttributeError:
+            continue
 
-		if request.has_key('date'):
-			try:
-				date = mxDateTime.DateTimeFrom(newjob['date'])
-				if mxDateTime.cmp(mxDateTime.DateTimeFrom(request['date']), date, 24 * 60 * 60) != 0:
-					break
-			except ValueError:
-				pass
+        if request.has_key('date'):
+            try:
+                date = mxDateTime.DateTimeFrom(newjob['date'])
+                if mxDateTime.cmp(mxDateTime.DateTimeFrom(request['date']), date, 24 * 60 * 60) != 0:
+                    break
+            except ValueError:
+                pass
 
-		newjob['time'] = 1
+        newjob['time'] = 1
 
-		if not oldjob:
-			oldjob = newjob
-		elif not all(newjob[key] == oldjob[key] for key in ['app', 'title']):
-			oldjob['date'] and jobs.append(oldjob)
-			oldjob = newjob
-		else:
-			oldjob['time'] += 1
+        if not oldjob:
+            oldjob = newjob
+        elif not all(newjob[key] == oldjob[key] for key in ['app', 'title']):
+            oldjob['date'] and jobs.append(oldjob)
+            oldjob = newjob
+        else:
+            oldjob['time'] += 1
 
-	if oldjob:
-		jobs.append(oldjob) # add the last job
+    if oldjob:
+        jobs.append(oldjob) # add the last job
 
-	jobs.reverse()
+    jobs.reverse()
 
-	return jobs
+    return jobs
 
 
 def main():
-	"""main function"""
-	parser = OptionParser()
-	parser.usage = '%prog <date>'
-	parser.add_option(
-			"-F", "--file", action="store",
-			default=os.path.join(os.environ['HOME'], 'work.log'),
-			dest="worklog_file", help="specify worklog file")
+    """main function"""
+    parser = OptionParser()
+    parser.usage = '%prog <date>'
+    parser.add_option(
+            "-F", "--file", action="store",
+            default=os.path.join(os.environ['HOME'], 'work.log'),
+            dest="worklog_file", help="specify worklog file")
 
-	options, args = parser.parse_args()
-	worklog_file = options.worklog_file
+    options, args = parser.parse_args()
+    worklog_file = options.worklog_file
 
-	if not os.path.isfile(worklog_file):
-		print 'Cannot find worklog file: ' + worklog_file 
-		return 1
+    if not os.path.isfile(worklog_file):
+        print 'Cannot find worklog file: ' + worklog_file 
+        return 1
 
-	request = {}
-	if args:
-		request['date'] = args[0]
+    request = {}
+    if args:
+        request['date'] = args[0]
 
-	lines = open(worklog_file).read().split('\n')
+    lines = open(worklog_file).read().split('\n')
 
-	jobs = parse_lines(lines, request)
+    jobs = parse_lines(lines, request)
 
-	for job in jobs:
-		job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
-		print "%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job
+    for job in jobs:
+        job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
+        print "%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job
 
-	return 0
+    return 0
 
 if __name__ == '__main__':
-	exit(main())
+    exit(main())
