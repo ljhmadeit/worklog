@@ -36,3 +36,5 @@ Dependency
 ----------
 
 * [mxDateTime](http://www.egenix.com/products/python/mxBase/mxDateTime/)
+* psutil
+* wnck
