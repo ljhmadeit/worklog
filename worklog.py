@@ -28,14 +28,19 @@ def log(output):
 
 def get_ssid():
     arg='iwconfig'    
+    ssid = None
     p = subprocess.Popen(arg, shell=True, stdout=subprocess.PIPE, stderr=None)
     for line in p.communicate():
         if line:
             match = re.search('ESSID:"(.*)"', line)
             if match:
-                return match.groups()[0]
+                ssid = match.groups()[0]
 
-    return '-'
+    if ssid:
+        ssid = ssid.replace(' ', '+')
+        return ssid
+    else:
+        return '-'
 
 def get_name(pid):
     return [ps.name for ps in psutil.get_process_list() if ps.pid == pid][0]
