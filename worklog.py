@@ -21,6 +21,7 @@ def log(output):
         output.write("%s %s %s %s %s %s\n" % (
             format, get_ip(), get_ssid(), get_date(),
             get_name(window.get_pid()), window.get_name()))
+        output.flush()
     except Exception, e:
         traceback.print_exc(file=sys.stderr)
 
