@@ -58,6 +58,7 @@ def parse_lines(lines, request):
             oldjob = newjob
         else:
             oldjob['time'] += 1
+            oldjob['date'] = newjob['date']
 
     if oldjob:
         jobs.append(oldjob) # add the last job
