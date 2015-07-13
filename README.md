@@ -38,3 +38,7 @@ Dependency
 * [mxDateTime](http://www.egenix.com/products/python/mxBase/mxDateTime/)
 * psutil
 * wnck
+
+### Arch Linux
+
+$ pacman -S python2-psutil python2-wnck python2-egenix-mx-base
