@@ -1,3 +1,4 @@
+#!env python2
 import gtk
 import glib
 import sys

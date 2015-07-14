@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!env python2
 
 """Worklog tool"""
 
