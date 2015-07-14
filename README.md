@@ -1,6 +1,14 @@
 Installation
 ------------
 
+### Linux
+
+Register the following script as a startup program.
+
+    nohup python /path/to/worklog.py >> ~/work.log 2>> ~/work.error.log&
+
+### OSX
+
 Put the scripts in any directory and make the worklog script executable.
 
     $ mkdir -p ~/bin
