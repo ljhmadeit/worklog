@@ -45,7 +45,7 @@ def get_ssid():
         return '-'
 
 def get_name(pid):
-    return [ps.name for ps in psutil.get_process_list() if ps.pid == pid][0]
+    return [ps.name() for ps in list(psutil.process_iter()) if ps.pid == pid][0]
 
 def get_date():
     return time.strftime('%Y/%m/%d-%H:%M', time.localtime())
