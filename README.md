@@ -49,4 +49,8 @@ Dependency
 
 ### Arch Linux
 
-$ pacman -S python2-psutil python2-wnck python2-egenix-mx-base
+    $ pacman -S python2-psutil python2-wnck python2-egenix-mx-base
+
+### Ubuntu
+
+    $ sudo apt install python-egenix-mxdatetime
