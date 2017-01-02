@@ -11,7 +11,12 @@ import time
 
 output = sys.stdout
 
+debug = False
+
 def log(output):
+    if debug:
+        sys.stderr.write("%s log start\n" % (get_date()));
+
     try:
         window = get_current_window()
         if not window:
@@ -23,6 +28,8 @@ def log(output):
             format, get_ip(), get_ssid(), get_date(),
             get_name(window.get_pid()), window.get_name()))
         output.flush()
+        if debug:
+            sys.stderr.write("%s log success\n" % (get_date()));
     except Exception, e:
         traceback.print_exc(file=sys.stderr)
 
