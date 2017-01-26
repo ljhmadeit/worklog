@@ -72,6 +72,10 @@ def parse_lines(lines, request):
 
     return jobs
 
+def print_merged_job(merged_job):
+    job_format = "%(date)s %(total_time)3dmin (%(time)3dmin) %(propotion)3d%% %(title)s"
+    merged_job['propotion'] = merged_job['time'] * 100 / merged_job['total_time']
+    print job_format % merged_job
 
 def main():
     """main function"""
@@ -82,29 +86,61 @@ def main():
             "-F", "--file", action="store",
             default=os.path.join(os.environ['HOME'], 'work.log'),
             dest="worklog_file", help="specify worklog file")
+    parser.add_option(
+            "", "--title", action="store",
+            dest="keyword", help="keyword to find by title")
 
     options, args = parser.parse_args()
     worklog_file = options.worklog_file
+    keyword = options.keyword
 
     if not os.path.isfile(worklog_file):
         print 'Cannot find worklog file: ' + worklog_file 
         return 1
 
+    cal = parsedatetime.Calendar()
     request = {}
     if len(args) == 1:
-        request['from'] = mxDateTime.DateTimeFrom(args[0])
-        request['to'] = request['from'] + 1
+        time_struct = cal.parse(args[0])[0]
+        request['from'] = date(time_struct.tm_year, time_struct.tm_mon, time_struct.tm_mday)
+        request['to'] = request['from'] + timedelta(days=1)
     elif len(args) == 2:
-        request['from'] = mxDateTime.DateTimeFrom(args[0])
-        request['to'] = mxDateTime.DateTimeFrom(args[1]) + 1
+        time_struct = cal.parse(args[0])[0]
+        request['from'] = date(time_struct.tm_year, time_struct.tm_mon, time_struct.tm_mday)
+        time_struct = cal.parse(args[1])[0]
+        request['to'] = date(time_struct.tm_year, time_struct.tm_mon, time_struct.tm_mday) + timedelta(days=1)
 
     lines = open(worklog_file).read().split('\n')
 
     jobs = parse_lines(lines, request)
 
-    for job in jobs:
-        job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
-        print "%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job
+    if keyword:
+        interval = 0
+        interval_limit = 10
+        merged_job = None
+        for job in jobs:
+            job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
+            if job['title'] and keyword in job['title']:
+                if merged_job == None:
+                    merged_job = job
+                    merged_job['total_time'] = 0
+                else:
+                    merged_job['time'] += job['time']
+                merged_job['total_time'] += job['time'] + interval
+                interval = 0
+            else:
+                if merged_job != None:
+                    interval += job['time']
+                    if interval > interval_limit:
+                        print_merged_job(merged_job)
+                        merged_job = None
+                        interval = 0
+        if merged_job != None:
+            print_merged_job(merged_job)
+    else:
+        for job in jobs:
+            job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
+            print "%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job
 
     return 0
 
