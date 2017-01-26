@@ -5,6 +5,9 @@
 import os, sys, re, time
 from optparse import OptionParser
 from mx import DateTime as mxDateTime
+import parsedatetime
+from datetime import date, timedelta
+from time import mktime
 
 worklog_formats = {
         ''  : "^(?P<date>[^ ]+)\s+(?P<app>[^ ]+)(\s+(?P<title>.*))?",
@@ -17,6 +20,7 @@ def parse_lines(lines, request):
     jobs = []
     oldjob = None
 
+    cal = parsedatetime.Calendar()
     in_process = False
     while lines:
         line = lines.pop()
@@ -38,8 +42,9 @@ def parse_lines(lines, request):
 
         if request.has_key('from'):
             try:
-                date = mxDateTime.DateTimeFrom(newjob['date'])
-                if date >= request['from'] and date < request['to']:
+                time_struct = cal.parse(newjob['date'])[0]
+                d = date(time_struct.tm_year, time_struct.tm_mon, time_struct.tm_mday)
+                if d >= request['from'] and d < request['to']:
                     in_process = True
                 else:
                     if in_process:
