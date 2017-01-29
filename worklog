@@ -6,7 +6,7 @@ import os, sys, re, time
 from optparse import OptionParser
 from mx import DateTime as mxDateTime
 import parsedatetime
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from time import mktime
 
 worklog_formats = {
@@ -73,9 +73,45 @@ def parse_lines(lines, request):
     return jobs
 
 def print_merged_job(merged_job):
-    job_format = "%(date)s %(total_time)3dmin (%(time)3dmin) %(propotion)3d%% %(title)s"
+    merged_job['total_time_hours'] = merged_job['total_time'] / 60
+    merged_job['total_time_mins'] = merged_job['total_time'] % 60
+    merged_job['time_hours'] = merged_job['time'] / 60
+    merged_job['time_mins'] = merged_job['time'] % 60
+
+    job_format = "%(date)s %(total_time_hours)2dh %(total_time_mins)2dm (%(time_hours)2dh %(time_mins)2dmin) %(propotion)3d%% %(title)s"
     merged_job['propotion'] = merged_job['time'] * 100 / merged_job['total_time']
     print job_format % merged_job
+
+def datetime_from_string(time_str):
+    cal = parsedatetime.Calendar()
+    time_struct = cal.parse(time_str)[0]
+    return datetime(*time_struct[:7])
+
+def print_productivity_report(jobs, keyword):
+    interval = 0
+    interval_limit = 5
+    merged_job = None
+    for job in jobs:
+        job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
+        if job['title'] and keyword in job['title']:
+            if merged_job == None:
+                merged_job = job
+                merged_job['total_time'] = 0
+            else:
+                merged_job['time'] += job['time']
+            merged_job['total_time'] += job['time'] + interval
+            interval = 0
+        else:
+            if merged_job != None:
+                time_from = datetime_from_string(merged_job['date']) + timedelta(0, 60 * merged_job['total_time']) 
+                time_to = datetime_from_string(job['date'])
+                interval += (time_to - time_from + timedelta(0, 60 * job['time'])).seconds / 60
+                if interval > interval_limit:
+                    print_merged_job(merged_job)
+                    merged_job = None
+                    interval = 0
+    if merged_job != None:
+        print_merged_job(merged_job)
 
 def main():
     """main function"""
@@ -115,28 +151,7 @@ def main():
     jobs = parse_lines(lines, request)
 
     if keyword:
-        interval = 0
-        interval_limit = 10
-        merged_job = None
-        for job in jobs:
-            job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
-            if job['title'] and keyword in job['title']:
-                if merged_job == None:
-                    merged_job = job
-                    merged_job['total_time'] = 0
-                else:
-                    merged_job['time'] += job['time']
-                merged_job['total_time'] += job['time'] + interval
-                interval = 0
-            else:
-                if merged_job != None:
-                    interval += job['time']
-                    if interval > interval_limit:
-                        print_merged_job(merged_job)
-                        merged_job = None
-                        interval = 0
-        if merged_job != None:
-            print_merged_job(merged_job)
+        print_productivity_report(jobs, keyword)
     else:
         for job in jobs:
             job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
