@@ -1,13 +1,16 @@
-#!env python2
-import gtk
-import glib
 import sys
 import subprocess
 import traceback
-import wnck
 import re
 import psutil
 import time
+
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GObject
+
+gi.require_version('Wnck', '3.0')
+from gi.repository import Wnck
 
 output = sys.stdout
 
@@ -30,7 +33,7 @@ def log(output):
         output.flush()
         if debug:
             sys.stderr.write("%s log success\n" % (get_date()));
-    except Exception, e:
+    except Exception:
         traceback.print_exc(file=sys.stderr)
 
     return True
@@ -41,7 +44,7 @@ def get_ssid():
     p = subprocess.Popen(arg, shell=True, stdout=subprocess.PIPE, stderr=None)
     for line in p.communicate():
         if line:
-            match = re.search('ESSID:"(.*)"', line)
+            match = re.search('ESSID:"(.*)"', line.decode('utf-8'))
             if match:
                 ssid = match.groups()[0]
 
@@ -59,7 +62,7 @@ def get_date():
 
 def get_current_window():
     try:
-        return wnck.screen_get_default().get_active_window()
+        return Wnck.Screen.get_default().get_active_window()
     except AttributeError:
         traceback.print_exc(file=sys.stderr)
         return False
@@ -73,11 +76,11 @@ def get_ip():
         sdata = data[0].split()
         ipaddr = sdata[ sdata.index('src')+1 ]
         return ipaddr
-    except Exception, e:
+    except Exception:
         traceback.print_exc(file=sys.stderr)
         return '-'
 
     # netdev = sdata[ sdata.index('dev')+1 ]
     
-glib.timeout_add(60 * 1000, log, output) # 60sec
-gtk.main()
+GObject.timeout_add(60 * 1000, log, output) # 60sec
+Gtk.main()
