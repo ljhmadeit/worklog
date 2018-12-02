@@ -1,10 +1,9 @@
-#!env python2
+#!env python3
 
 """Worklog tool"""
 
 import os, sys, re, time
 from optparse import OptionParser
-from mx import DateTime as mxDateTime
 import parsedatetime
 from datetime import date, timedelta, datetime
 from time import mktime
@@ -30,7 +29,7 @@ def parse_lines(lines, request):
         except IndexError:
             continue
 
-        if not worklog_formats.has_key(format_id):
+        if not format_id in worklog_formats:
             format_id = ''
         format = worklog_formats[format_id]
         line   = line[len(format_id):].strip()
@@ -40,7 +39,7 @@ def parse_lines(lines, request):
         except AttributeError:
             continue
 
-        if request.has_key('from'):
+        if 'from' in request:
             try:
                 time_struct = cal.parse(newjob['date'])[0]
                 d = date(time_struct.tm_year, time_struct.tm_mon, time_struct.tm_mday)
@@ -80,7 +79,7 @@ def print_merged_job(merged_job):
 
     job_format = "%(date)s %(total_time_hours)2dh %(total_time_mins)2dm (%(time_hours)2dh %(time_mins)2dmin) %(propotion)3d%% %(title)s"
     merged_job['propotion'] = merged_job['time'] * 100 / merged_job['total_time']
-    print job_format % merged_job
+    print(job_format % merged_job)
 
 def datetime_from_string(time_str):
     cal = parsedatetime.Calendar()
@@ -92,7 +91,7 @@ def print_productivity_report(jobs, keyword):
     interval_limit = 5
     merged_job = None
     for job in jobs:
-        job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
+        job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if key in job])
         if job['title'] and keyword in job['title']:
             if merged_job == None:
                 merged_job = job
@@ -131,7 +130,7 @@ def main():
     keyword = options.keyword
 
     if not os.path.isfile(worklog_file):
-        print 'Cannot find worklog file: ' + worklog_file 
+        print('Cannot find worklog file: ' + worklog_file)
         return 1
 
     cal = parsedatetime.Calendar()
@@ -154,8 +153,8 @@ def main():
         print_productivity_report(jobs, keyword)
     else:
         for job in jobs:
-            job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if job.has_key(key)])
-            print "%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job
+            job['apip'] = ' '.join([job[key] for key in ['ap', 'ip'] if key in job])
+            print("%(apip)s %(date)s %(time)smin %(app)s %(title)s" % job)
 
     return 0
 
