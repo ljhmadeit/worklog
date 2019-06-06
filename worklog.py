@@ -7,7 +7,7 @@ import time
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GLib
 
 gi.require_version('Wnck', '3.0')
 from gi.repository import Wnck
@@ -82,5 +82,5 @@ def get_ip():
 
     # netdev = sdata[ sdata.index('dev')+1 ]
     
-GObject.timeout_add(60 * 1000, log, output) # 60sec
+GLib.timeout_add(60 * 1000, log, output) # 60sec
 Gtk.main()
