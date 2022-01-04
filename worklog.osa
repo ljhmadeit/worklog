@@ -10,16 +10,17 @@ end replace_chars
 
 -- Tell what you are doing now
 
-tell application "System Events"
-	set frontApp to name of first application process whose frontmost is true
-end tell
-
 try
-	tell application frontApp
-		if the (count of windows) is not 0 then
-			set window_title to name of front window
-		end if
-	end tell
+    set window_title to ""
+    tell application "System Events"
+        set frontApp to first application process whose frontmost is true
+        set frontAppName to name of frontApp
+        tell process frontAppName
+            tell (1st window whose value of attribute "AXMain" is true)
+                set window_title to value of attribute "AXTitle"
+            end tell
+        end tell
+    end tell
 on error errmsg number errnum
 	-- Know Errors:
 	-- File WinAppHelper wasn’t found. (-43)
@@ -51,4 +52,4 @@ if theSsid = "" then set theSsid to "-"
 set theSsid to replace_chars(theSsid, " ", "+")
 
 -- <format-id> <ip> <ssid> <date> <appname> <window-title>
-"a4 " & theIp & " " & theSsid & " " & theDate & " " & frontApp & ": " & window_title
+"a4 " & theIp & " " & theSsid & " " & theDate & " " & frontAppName & ": " & window_title
