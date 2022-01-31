@@ -50,6 +50,7 @@ if theSsid = "" then set theSsid to "-"
 
 -- replace whitespace
 set theSsid to replace_chars(theSsid, " ", "+")
+set window_title to replace_chars(window_title, "\n", " ")
 
 -- <format-id> <ip> <ssid> <date> <appname> <window-title>
 "a4 " & theIp & " " & theSsid & " " & theDate & " " & frontAppName & ": " & window_title
